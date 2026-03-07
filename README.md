@@ -2,6 +2,56 @@
 
 Terraform module to create and manage AWS API Gateway V2 (HTTP and WebSocket APIs).
 
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Clients["Clients"]
+        HTTP["HTTP Client"]
+        WS["WebSocket Client"]
+    end
+
+    subgraph APIGW["API Gateway V2"]
+        API["HTTP / WebSocket API"]
+        STAGE["Stages\n(auto-deploy)"]
+        ROUTES["Routes\n(GET, POST, $connect, $default)"]
+        AUTH["Authorizers\n(JWT / Cognito / Auth0)"]
+    end
+
+    subgraph Integrations["Backend Integrations"]
+        LAMBDA["Lambda\nIntegration"]
+        HTTPBE["HTTP\nIntegration"]
+        VPCLINK["VPC Link\n(Private Integration)"]
+    end
+
+    subgraph Domain["Custom Domain"]
+        CNAME["Custom Domain Name"]
+        ACM["ACM Certificate"]
+    end
+
+    subgraph Logging["Observability"]
+        CW["CloudWatch\nAccess Logs"]
+    end
+
+    HTTP --> CNAME
+    WS --> CNAME
+    CNAME --> ACM
+    ACM --> API
+    API --> STAGE
+    STAGE --> ROUTES
+    ROUTES --> AUTH
+    AUTH --> LAMBDA
+    AUTH --> HTTPBE
+    AUTH --> VPCLINK
+    STAGE --> CW
+
+    style Clients fill:#FF9900,color:#fff
+    style APIGW fill:#0078D4,color:#fff
+    style Integrations fill:#3F8624,color:#fff
+    style Domain fill:#8C4FFF,color:#fff
+    style Logging fill:#DD344C,color:#fff
+```
+
 ## Features
 
 - HTTP and WebSocket API Gateway support
