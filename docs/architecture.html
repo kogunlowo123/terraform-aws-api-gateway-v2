@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>terraform-aws-api-gateway-v2 — Architecture</title>
+<style>
+:root{--ink:#0b0c0b;--paper:#f5f2eb;--accent:#c8420a;--accent2:#e8720c;--mono:'Courier New',monospace;--sans:system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:13px;line-height:1.7;padding:0}
+.container{max-width:1100px;margin:0 auto;padding:32px 48px}
+header{border-bottom:2px solid var(--accent);padding-bottom:24px;margin-bottom:32px}
+h1{font-size:28px;font-family:var(--sans);font-weight:700;letter-spacing:.02em}
+h1 em{font-style:normal;color:var(--accent)}
+.meta{font-size:10px;color:rgba(255,255,255,.4);margin-top:6px;letter-spacing:.05em}
+.badge{display:inline-block;font-size:9px;padding:2px 8px;border-radius:2px;margin-right:4px;letter-spacing:.04em}
+.badge-lang{background:rgba(200,66,10,.2);color:var(--accent);border:1px solid rgba(200,66,10,.4)}
+.badge-cloud{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1)}
+.badge-cat{background:rgba(232,114,12,.15);color:var(--accent2);border:1px solid rgba(232,114,12,.3)}
+h2{font-size:16px;font-family:var(--sans);color:var(--accent);margin:32px 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(200,66,10,.3);text-transform:uppercase;letter-spacing:.04em}
+h3{font-size:13px;font-family:var(--sans);color:var(--paper);margin:20px 0 8px}
+p,li{font-size:12px;line-height:1.8;color:rgba(255,255,255,.75)}
+ul{padding-left:20px;margin:8px 0}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:16px 0}
+.card{border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:16px;background:rgba(255,255,255,.02)}
+.card-label{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.card-value{font-size:14px;font-weight:700;color:var(--paper)}
+.diagram{border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:24px;margin:16px 0;background:rgba(255,255,255,.02);overflow-x:auto}
+.diagram svg{width:100%;height:auto}
+.flow-box{display:inline-block;border:1px solid var(--accent);border-radius:3px;padding:6px 14px;margin:4px;font-size:10px;color:var(--paper);background:rgba(200,66,10,.08)}
+.flow-arrow{color:var(--accent);margin:0 8px;font-size:14px}
+.checklist{list-style:none;padding:0}
+.checklist li{padding:4px 0;font-size:11px}
+.checklist li::before{content:'&#10003; ';color:var(--accent);font-weight:bold}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:11px}
+th{text-align:left;padding:8px;border-bottom:2px solid var(--accent);color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+td{padding:8px;border-bottom:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.7)}
+footer{margin-top:48px;padding-top:16px;border-top:2px solid var(--accent);font-size:9px;color:rgba(255,255,255,.3)}
+footer a{color:var(--accent);text-decoration:none}
+@media print{body{background:#fff;color:#000}h2{color:#c8420a}.card{border-color:#ccc}}
+@media(max-width:768px){.container{padding:16px}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>terraform-aws-api-gateway-v2 <em>Architecture</em></h1>
+  <div class="meta">
+    <span class="badge badge-lang">HCL / Terraform</span>
+    <span class="badge badge-cloud">AWS</span>
+    <span class="badge badge-cat">Infrastructure / IaC</span>
+  </div>
+</header>
+
+<!-- 1. Executive Summary -->
+<h2>Executive Summary</h2>
+<p>
+  This module creates and manages AWS API Gateway V2 resources supporting both HTTP and WebSocket protocols, complete with route definitions, Lambda and HTTP integrations, JWT authorizers (Cognito/Auth0), VPC Links for private backends, custom domain names with ACM certificates, and CloudWatch access logging. It provides a fully managed, serverless API layer that scales automatically and eliminates operational overhead for building modern APIs and real-time applications.
+</p>
+
+<!-- 2. Overview Cards -->
+<h2>Overview</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="card-label">Resources Created</div>
+    <div class="card-value">8</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Variables Count</div>
+    <div class="card-value">13</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Outputs Count</div>
+    <div class="card-value">16</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Provider</div>
+    <div class="card-value">hashicorp/aws</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Terraform Version</div>
+    <div class="card-value">&gt;= 1.0</div>
+  </div>
+</div>
+
+<!-- 3. Architecture Diagram -->
+<h2>Architecture Diagram</h2>
+<div class="diagram">
+  <div style="text-align:center">
+    <span class="flow-box">HTTP / WebSocket Clients</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">Custom Domain (ACM)</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">API Gateway V2</span>
+    <br/><br/>
+    <span class="flow-box">API Gateway V2</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">Stages (auto-deploy)</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">Routes (GET, POST, $connect)</span>
+    <br/><br/>
+    <span class="flow-box">Routes</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">JWT Authorizer</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">Integrations</span>
+    <br/><br/>
+    <span class="flow-box">Integrations</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">Lambda (AWS_PROXY)</span>
+    &nbsp;&nbsp;
+    <span class="flow-box">Integrations</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">HTTP Backend</span>
+    &nbsp;&nbsp;
+    <span class="flow-box">Integrations</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">VPC Link (Private)</span>
+    <br/><br/>
+    <span class="flow-box">Stages</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-box">CloudWatch Access Logs</span>
+  </div>
+</div>
+
+<!-- 4. Component Breakdown -->
+<h2>Component Breakdown</h2>
+<table>
+  <thead>
+    <tr><th>Resource</th><th>Type</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>aws_apigatewayv2_api.this</td><td>API Gateway</td><td>Creates the HTTP or WebSocket API with optional CORS configuration</td></tr>
+    <tr><td>aws_apigatewayv2_stage.this</td><td>Stage</td><td>Deployment stages with auto-deploy, throttling, and access logging</td></tr>
+    <tr><td>aws_apigatewayv2_route.this</td><td>Route</td><td>Defines API routes with method, path, and optional authorization</td></tr>
+    <tr><td>aws_apigatewayv2_integration.this</td><td>Integration</td><td>Connects routes to Lambda, HTTP, or VPC Link backends</td></tr>
+    <tr><td>aws_apigatewayv2_authorizer.this</td><td>Authorizer</td><td>JWT authorizers for Cognito, Auth0, or custom OIDC providers</td></tr>
+    <tr><td>aws_apigatewayv2_vpc_link.this</td><td>VPC Link</td><td>Enables private integrations with internal ALBs or NLBs</td></tr>
+    <tr><td>aws_apigatewayv2_domain_name.this</td><td>Custom Domain</td><td>Custom domain with ACM certificate and TLS 1.2</td></tr>
+    <tr><td>aws_apigatewayv2_api_mapping.this</td><td>API Mapping</td><td>Maps stages to the custom domain</td></tr>
+    <tr><td>aws_cloudwatch_log_group.this</td><td>Log Group</td><td>CloudWatch log groups for API access logging</td></tr>
+  </tbody>
+</table>
+
+<!-- 5. Data Flow -->
+<h2>Data Flow</h2>
+<ol>
+  <li>Client sends an HTTP request or opens a WebSocket connection to the custom domain or default endpoint.</li>
+  <li>The API Gateway receives the request and matches it against the configured stage.</li>
+  <li>The route key (method + path for HTTP, or $connect/$default for WebSocket) determines the target route.</li>
+  <li>If the route has an authorizer, the JWT token is validated against the configured issuer and audience.</li>
+  <li>The integration forwards the request to the backend: Lambda (AWS_PROXY), HTTP endpoint, or VPC Link.</li>
+  <li>For VPC Link integrations, traffic traverses an ENI into the private VPC to reach internal services.</li>
+  <li>The backend response flows back through the API Gateway to the client.</li>
+  <li>Access logs are streamed to CloudWatch Log Groups with configurable format and 30-day retention.</li>
+</ol>
+
+<!-- 6. Security Controls -->
+<h2>Security Controls</h2>
+<ul>
+  <li><strong>JWT Authorization</strong> &mdash; Route-level JWT authorizers validate tokens from Cognito, Auth0, or any OIDC provider.</li>
+  <li><strong>TLS 1.2</strong> &mdash; Custom domains enforce TLS 1.2 security policy for all connections.</li>
+  <li><strong>Disable Default Endpoint</strong> &mdash; Option to disable the default execute-api endpoint, forcing traffic through the custom domain.</li>
+  <li><strong>CORS Configuration</strong> &mdash; Fine-grained CORS controls for HTTP APIs (origins, methods, headers, credentials).</li>
+  <li><strong>VPC Links</strong> &mdash; Private integrations keep backend traffic within the VPC, never exposed to the internet.</li>
+  <li><strong>Throttling</strong> &mdash; Stage and route-level throttling limits protect against abuse and runaway costs.</li>
+  <li><strong>CloudWatch Logging</strong> &mdash; Detailed access logs for audit, debugging, and compliance.</li>
+</ul>
+
+<!-- 7. Industry Adaptation -->
+<h2>Industry Adaptation</h2>
+<table>
+  <thead>
+    <tr><th>Industry</th><th>Use Case</th><th>Key Features Leveraged</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Healthcare</td><td>HIPAA-compliant patient API with token-based auth</td><td>JWT authorizers, TLS 1.2, access logging, VPC Links</td></tr>
+    <tr><td>Finance</td><td>Real-time trading WebSocket API</td><td>WebSocket protocol, throttling, CloudWatch logging</td></tr>
+    <tr><td>Government</td><td>Citizen services API with strict access control</td><td>JWT auth, disable default endpoint, CORS lockdown</td></tr>
+    <tr><td>Retail</td><td>Serverless product catalog and search APIs</td><td>HTTP API, Lambda proxy, auto-deploy stages, CORS</td></tr>
+    <tr><td>SaaS</td><td>Multi-tenant API with custom domains per tenant</td><td>Custom domains, API mappings, stage variables</td></tr>
+  </tbody>
+</table>
+
+<!-- 8. Production Readiness Checklist -->
+<h2>Production Readiness Checklist</h2>
+<ul class="checklist">
+  <li>Configure JWT authorizers on all sensitive routes</li>
+  <li>Set up a custom domain with ACM certificate</li>
+  <li>Disable the default execute-api endpoint (<code>disable_execute_api_endpoint = true</code>)</li>
+  <li>Enable access logging with CloudWatch destination ARN</li>
+  <li>Configure throttling limits on stages and routes</li>
+  <li>Use VPC Links for internal/private backend services</li>
+  <li>Set restrictive CORS policies (avoid wildcard origins)</li>
+  <li>Enable auto-deploy for continuous deployment workflows</li>
+  <li>Configure Route 53 CNAME/alias for the custom domain target</li>
+  <li>Monitor API metrics via CloudWatch detailed metrics</li>
+</ul>
+
+<!-- 9. Configuration Reference -->
+<h2>Configuration Reference</h2>
+<table>
+  <thead>
+    <tr><th>Variable</th><th>Type</th><th>Description</th><th>Default</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>name</td><td>string</td><td>The name of the API Gateway</td><td><em>required</em></td></tr>
+    <tr><td>description</td><td>string</td><td>The description of the API Gateway</td><td>""</td></tr>
+    <tr><td>protocol_type</td><td>string</td><td>API protocol type: HTTP or WEBSOCKET</td><td>"HTTP"</td></tr>
+    <tr><td>cors_configuration</td><td>object</td><td>CORS configuration for HTTP APIs</td><td>null</td></tr>
+    <tr><td>routes</td><td>map(object)</td><td>Map of route configurations (method, path, integration)</td><td>{}</td></tr>
+    <tr><td>integrations</td><td>map(any)</td><td>Map of integration configurations (VPC link, connection type)</td><td>{}</td></tr>
+    <tr><td>authorizers</td><td>map(object)</td><td>Map of JWT authorizer configurations</td><td>{}</td></tr>
+    <tr><td>stages</td><td>map(object)</td><td>Map of stage configurations (auto-deploy, logging, throttling)</td><td>{}</td></tr>
+    <tr><td>vpc_links</td><td>map(object)</td><td>Map of VPC Link configurations (subnets, security groups)</td><td>{}</td></tr>
+    <tr><td>domain_name</td><td>string</td><td>Custom domain name for the API</td><td>null</td></tr>
+    <tr><td>domain_certificate_arn</td><td>string</td><td>ARN of the ACM certificate for the custom domain</td><td>null</td></tr>
+    <tr><td>disable_execute_api_endpoint</td><td>bool</td><td>Disable the default execute-api endpoint</td><td>false</td></tr>
+    <tr><td>tags</td><td>map(string)</td><td>Tags to assign to resources</td><td>{}</td></tr>
+  </tbody>
+</table>
+
+<!-- 10. Deployment -->
+<h2>Deployment</h2>
+<h3>Quick Start</h3>
+<pre style="background:rgba(255,255,255,.04);padding:16px;border-radius:4px;overflow-x:auto;color:rgba(255,255,255,.7);font-size:11px">
+module "api_gateway" {
+  source = "github.com/kogunlowo123/terraform-aws-api-gateway-v2"
+
+  name          = "my-http-api"
+  description   = "My HTTP API"
+  protocol_type = "HTTP"
+
+  routes = {
+    "get-hello" = {
+      method          = "GET"
+      path            = "/hello"
+      integration_uri = aws_lambda_function.hello.invoke_arn
+    }
+  }
+
+  stages = {
+    "$default" = {
+      auto_deploy = true
+    }
+  }
+}
+</pre>
+<h3>Commands</h3>
+<pre style="background:rgba(255,255,255,.04);padding:16px;border-radius:4px;overflow-x:auto;color:rgba(255,255,255,.7);font-size:11px">
+terraform init      # Initialize providers and modules
+terraform plan      # Preview infrastructure changes
+terraform apply     # Deploy the API Gateway infrastructure
+terraform destroy   # Tear down all resources
+</pre>
+
+<!-- 11. Links -->
+<h2>Links</h2>
+<ul>
+  <li><a href="https://github.com/kogunlowo123/terraform-aws-api-gateway-v2" style="color:var(--accent)">GitHub Repository</a></li>
+  <li><a href="https://github.com/kogunlowo123/terraform-aws-api-gateway-v2/blob/main/README.md" style="color:var(--accent)">README</a></li>
+  <li><a href="https://github.com/kogunlowo123/terraform-aws-api-gateway-v2/tree/main/examples" style="color:var(--accent)">Examples</a></li>
+  <li><a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api" style="color:var(--accent)">AWS Provider: aws_apigatewayv2_api</a></li>
+</ul>
+
+<footer>
+  <a href="https://github.com/kogunlowo123/terraform-aws-api-gateway-v2">terraform-aws-api-gateway-v2</a> &middot; Generated 2026-03-15 &middot; Kehinde Ogunlowo
+</footer>
+</div>
+</body>
+</html>
