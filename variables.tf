@@ -1,16 +1,16 @@
 variable "name" {
-  description = "The name of the API Gateway."
+  description = "The name of the API Gateway"
   type        = string
 }
 
 variable "description" {
-  description = "The description of the API Gateway."
+  description = "The description of the API Gateway"
   type        = string
   default     = ""
 }
 
 variable "protocol_type" {
-  description = "The API protocol type. Valid values: HTTP, WEBSOCKET."
+  description = "The API protocol type, valid values: HTTP, WEBSOCKET"
   type        = string
   default     = "HTTP"
 
@@ -21,7 +21,7 @@ variable "protocol_type" {
 }
 
 variable "cors_configuration" {
-  description = "CORS configuration for the API Gateway (HTTP APIs only)."
+  description = "CORS configuration for the API Gateway (HTTP APIs only)"
   type = object({
     allow_credentials = optional(bool, false)
     allow_headers     = optional(list(string), [])
@@ -34,7 +34,7 @@ variable "cors_configuration" {
 }
 
 variable "routes" {
-  description = "Map of route configurations for the API Gateway."
+  description = "Map of route configurations for the API Gateway"
   type = map(object({
     method           = optional(string, "ANY")
     path             = string
@@ -46,13 +46,13 @@ variable "routes" {
 }
 
 variable "integrations" {
-  description = "Map of integration configurations for the API Gateway."
+  description = "Map of integration configurations for the API Gateway"
   type        = map(any)
   default     = {}
 }
 
 variable "authorizers" {
-  description = "Map of authorizer configurations for the API Gateway."
+  description = "Map of authorizer configurations for the API Gateway"
   type = map(object({
     type             = optional(string, "JWT")
     identity_sources = optional(list(string), ["$request.header.Authorization"])
@@ -63,7 +63,7 @@ variable "authorizers" {
 }
 
 variable "stages" {
-  description = "Map of stage configurations for the API Gateway."
+  description = "Map of stage configurations for the API Gateway"
   type = map(object({
     auto_deploy = optional(bool, true)
     access_log_settings = optional(object({
@@ -86,7 +86,7 @@ variable "stages" {
 }
 
 variable "vpc_links" {
-  description = "Map of VPC Link configurations for the API Gateway."
+  description = "Map of VPC Link configurations for the API Gateway"
   type = map(object({
     subnet_ids         = list(string)
     security_group_ids = list(string)
@@ -95,25 +95,31 @@ variable "vpc_links" {
 }
 
 variable "domain_name" {
-  description = "Custom domain name for the API Gateway."
+  description = "Custom domain name for the API Gateway"
   type        = string
   default     = null
 }
 
 variable "domain_certificate_arn" {
-  description = "ARN of the ACM certificate for the custom domain."
+  description = "ARN of the ACM certificate for the custom domain"
   type        = string
   default     = null
 }
 
 variable "disable_execute_api_endpoint" {
-  description = "Whether to disable the default execute-api endpoint."
+  description = "Whether to disable the default execute-api endpoint"
   type        = bool
   default     = false
 }
 
+variable "default_log_format" {
+  description = "Default log format JSON string for access log settings"
+  type        = string
+  default     = "{\"requestId\":\"$context.requestId\",\"ip\":\"$context.identity.sourceIp\",\"requestTime\":\"$context.requestTime\",\"httpMethod\":\"$context.httpMethod\",\"routeKey\":\"$context.routeKey\",\"status\":\"$context.status\",\"protocol\":\"$context.protocol\",\"responseLength\":\"$context.responseLength\",\"integrationError\":\"$context.integrationErrorMessage\"}"
+}
+
 variable "tags" {
-  description = "A map of tags to assign to resources."
+  description = "Tags to apply to all resources"
   type        = map(string)
   default     = {}
 }

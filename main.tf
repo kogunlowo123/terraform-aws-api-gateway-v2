@@ -41,7 +41,7 @@ resource "aws_apigatewayv2_stage" "this" {
 
     content {
       destination_arn = access_log_settings.value.destination_arn
-      format          = coalesce(access_log_settings.value.format, local.default_log_format)
+      format          = coalesce(access_log_settings.value.format, var.default_log_format)
     }
   }
 
@@ -137,7 +137,7 @@ resource "aws_apigatewayv2_vpc_link" "this" {
 ################################################################################
 
 resource "aws_apigatewayv2_domain_name" "this" {
-  count = local.create_domain ? 1 : 0
+  count = var.domain_name != null && var.domain_certificate_arn != null ? 1 : 0
 
   domain_name = var.domain_name
 
@@ -151,7 +151,7 @@ resource "aws_apigatewayv2_domain_name" "this" {
 }
 
 resource "aws_apigatewayv2_api_mapping" "this" {
-  for_each = local.create_domain ? var.stages : {}
+  for_each = var.domain_name != null && var.domain_certificate_arn != null ? var.stages : {}
 
   api_id      = aws_apigatewayv2_api.this.id
   domain_name = aws_apigatewayv2_domain_name.this[0].id
@@ -163,7 +163,7 @@ resource "aws_apigatewayv2_api_mapping" "this" {
 ################################################################################
 
 resource "aws_cloudwatch_log_group" "this" {
-  for_each = local.create_log_group
+  for_each = { for k, v in var.stages : k => v if v.access_log_settings != null }
 
   name              = "/aws/apigateway/${var.name}/${each.key}"
   retention_in_days = 30
