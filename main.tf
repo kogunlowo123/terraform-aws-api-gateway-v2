@@ -89,7 +89,7 @@ resource "aws_apigatewayv2_integration" "this" {
   integration_method = var.protocol_type == "HTTP" ? each.value.method : null
 
   connection_type = lookup(var.integrations, each.key, null) != null ? lookup(var.integrations[each.key], "connection_type", "INTERNET") : "INTERNET"
-  connection_id   = lookup(var.integrations, each.key, null) != null ? (
+  connection_id = lookup(var.integrations, each.key, null) != null ? (
     lookup(var.integrations[each.key], "vpc_link_key", null) != null ? aws_apigatewayv2_vpc_link.this[var.integrations[each.key].vpc_link_key].id : null
   ) : null
 
